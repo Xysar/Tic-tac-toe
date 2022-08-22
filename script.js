@@ -6,11 +6,10 @@ const gameBoard = (() => {
   let gameArray = [];
   let boardSpaces = document.querySelectorAll(".gameSquare");
 
+  const getGameArray = () => gameArray;
   for (let i = 0; i < boardSpaces.length; i++) {
     boardSpaces[i].addEventListener("click", (event) => {
       let index = event.target.getAttribute("data");
-      console.log(index);
-      console.log(gameArray);
 
       if (typeof gameArray[index] !== "undefined") {
         return;
@@ -23,12 +22,17 @@ const gameBoard = (() => {
       }
       gameArray[index] = gameDirector.getCurrentPlayer().symbol;
       event.target.firstChild.innerText = gameArray[index];
-      console.log(gameArray);
       gameDirector.turnOver();
     });
   }
+  const resetBoard = () => {
+    boardSpaces.forEach((e) => {
+      e.firstChild.innerText = "";
+    });
+    gameArray = [];
+  };
 
-  return { gameArray };
+  return { getGameArray, resetBoard };
 })();
 
 const gameDirector = (() => {
@@ -50,6 +54,7 @@ const gameDirector = (() => {
     [0, 4, 8],
     [2, 4, 6],
   ];
+
   const playerDisplay = document.getElementById("currentPlayerDisplay");
 
   const getCurrentPlayer = () => currentPlayer;
@@ -59,9 +64,11 @@ const gameDirector = (() => {
   };
 
   const checkWin = () => {
-    let board = gameBoard.gameArray;
+    let board = gameBoard.getGameArray();
+
     //check 'X'
-    winConditions.forEach((array) => {
+    for (let i = 0; i < winConditions.length; i++) {
+      let array = winConditions[i];
       if (
         board[array[0]] === player1.symbol &&
         board[array[1]] === player1.symbol &&
@@ -78,7 +85,7 @@ const gameDirector = (() => {
         gameOver("Player 2");
         return;
       }
-    });
+    }
     if (spacesLeft === 0) {
       gameOver("tie");
     }
@@ -94,13 +101,19 @@ const gameDirector = (() => {
     gameRunning = false;
     const button = document.createElement("button");
     button.innerText = "Play Again?";
-    button.addEventListener("click", (event) => restartGame());
+    button.addEventListener("click", (event) => {
+      restartGame();
+      container.removeChild(button);
+      container.removeChild(announcement);
+    });
     container.appendChild(announcement);
     container.appendChild(button);
   };
 
   const restartGame = () => {
-    console.log("works");
+    gameBoard.resetBoard();
+    gameRunning = true;
+    spacesLeft = 9;
   };
 
   const turnOver = () => {
