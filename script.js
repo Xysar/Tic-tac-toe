@@ -11,13 +11,16 @@ const gameBoard = (() => {
       let index = event.target.getAttribute("data");
       console.log(index);
       console.log(gameArray);
+
       if (typeof gameArray[index] !== "undefined") {
         return;
       }
       if (index === null) {
         return;
       }
-
+      if (!gameDirector.getGameRunning()) {
+        return;
+      }
       gameArray[index] = gameDirector.getCurrentPlayer().symbol;
       event.target.firstChild.innerText = gameArray[index];
       console.log(gameArray);
@@ -31,6 +34,9 @@ const gameBoard = (() => {
 const gameDirector = (() => {
   let player1 = player("player", "X");
   let player2 = player("computer", "O");
+  let gameRunning = true;
+
+  const container = document.querySelector(".container");
 
   let spacesLeft = 9;
   let currentPlayer = player1;
@@ -47,6 +53,7 @@ const gameDirector = (() => {
   const playerDisplay = document.getElementById("currentPlayerDisplay");
 
   const getCurrentPlayer = () => currentPlayer;
+  const getGameRunning = () => gameRunning;
   const changePlayerDisplay = () => {
     playerDisplay.innerText = currentPlayer.symbol;
   };
@@ -61,6 +68,7 @@ const gameDirector = (() => {
         board[array[2]] === player1.symbol
       ) {
         gameOver("Player 1");
+        return;
       }
       if (
         board[array[0]] === player2.symbol &&
@@ -68,16 +76,31 @@ const gameDirector = (() => {
         board[array[2]] === player2.symbol
       ) {
         gameOver("Player 2");
+        return;
       }
     });
+    if (spacesLeft === 0) {
+      gameOver("tie");
+    }
   };
 
   const gameOver = (endState) => {
+    const announcement = document.createElement("p");
     if (endState === "tie") {
-      console.log("tied game");
+      announcement.innerText = "Tied Game";
     } else {
-      console.log(endState + " is the winner!");
+      announcement.innerText = endState + " is the winner!";
     }
+    gameRunning = false;
+    const button = document.createElement("button");
+    button.innerText = "Play Again?";
+    button.addEventListener("click", (event) => restartGame());
+    container.appendChild(announcement);
+    container.appendChild(button);
+  };
+
+  const restartGame = () => {
+    console.log("works");
   };
 
   const turnOver = () => {
@@ -85,12 +108,9 @@ const gameDirector = (() => {
       currentPlayer = player2;
     } else currentPlayer = player1;
     changePlayerDisplay();
-    checkWin();
     spacesLeft--;
-    if (spacesLeft === 0) {
-      gameOver("tie");
-    }
+    checkWin();
   };
 
-  return { turnOver, getCurrentPlayer };
+  return { turnOver, getCurrentPlayer, getGameRunning };
 })();
