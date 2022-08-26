@@ -1,129 +1,142 @@
-const player = (name, symbol) => {
-  return { name, symbol };
-};
-
-const gameBoard = (() => {
-  let gameArray = [];
-  let boardSpaces = document.querySelectorAll(".gameSquare");
-
-  const getGameArray = () => gameArray;
-  for (let i = 0; i < boardSpaces.length; i++) {
-    boardSpaces[i].addEventListener("click", (event) => {
-      let index = event.target.getAttribute("data");
-
-      if (typeof gameArray[index] !== "undefined") {
-        return;
-      }
-      if (index === null) {
-        return;
-      }
-      if (!gameDirector.getGameRunning()) {
-        return;
-      }
-      gameArray[index] = gameDirector.getCurrentPlayer().symbol;
-      event.target.firstChild.innerText = gameArray[index];
-      gameDirector.turnOver();
-    });
+class Player {
+  constructor(name, symbol) {
+    this.name = name;
+    this.symbol = symbol;
   }
-  const resetBoard = () => {
-    boardSpaces.forEach((e) => {
+}
+
+class GameBoard {
+  constructor() {
+    this.gameArray = [];
+    this.boardSpaces = document.querySelectorAll(".gameSquare");
+    for (let i = 0; i < this.boardSpaces.length; i++) {
+      this.boardSpaces[i].addEventListener("click", (event) => {
+        let index = event.target.getAttribute("data");
+
+        if (typeof this.gameArray[index] !== "undefined") {
+          return;
+        }
+        if (index === null) {
+          return;
+        }
+
+        if (!game.getGameRunning()) {
+          return;
+        }
+
+        this.gameArray[index] = game.getCurrentPlayer().symbol;
+        event.target.firstChild.innerText = this.gameArray[index];
+        game.turnOver();
+      });
+    }
+  }
+
+  getGameArray() {
+    return this.gameArray;
+  }
+  resetBoard() {
+    this.boardSpaces.forEach((e) => {
       e.firstChild.innerText = "";
     });
-    gameArray = [];
-  };
+    this.gameArray = [];
+  }
+}
 
-  return { getGameArray, resetBoard };
-})();
+class GameDirector {
+  constructor() {
+    this.player1 = new Player("player", "X");
+    this.player2 = new Player("computer", "O");
+    this.gameRunning = true;
 
-const gameDirector = (() => {
-  let player1 = player("player", "X");
-  let player2 = player("computer", "O");
-  let gameRunning = true;
+    this.container = document.querySelector(".container");
 
-  const container = document.querySelector(".container");
+    this.spacesLeft = 9;
+    this.currentPlayer = this.player1;
+    this.winConditions = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
 
-  let spacesLeft = 9;
-  let currentPlayer = player1;
-  let winConditions = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
+    this.playerDisplay = document.getElementById("currentPlayerDisplay");
+  }
+  getCurrentPlayer() {
+    return this.currentPlayer;
+  }
+  getGameRunning() {
+    return this.gameRunning;
+  }
+  changePlayerDisplay() {
+    this.playerDisplay.innerText = this.currentPlayer.symbol;
+  }
 
-  const playerDisplay = document.getElementById("currentPlayerDisplay");
-
-  const getCurrentPlayer = () => currentPlayer;
-  const getGameRunning = () => gameRunning;
-  const changePlayerDisplay = () => {
-    playerDisplay.innerText = currentPlayer.symbol;
-  };
-
-  const checkWin = () => {
-    let board = gameBoard.getGameArray();
+  checkWin() {
+    let board = gameboard.getGameArray();
 
     //check 'X'
-    for (let i = 0; i < winConditions.length; i++) {
-      let array = winConditions[i];
+    for (let i = 0; i < this.winConditions.length; i++) {
+      let array = this.winConditions[i];
       if (
-        board[array[0]] === player1.symbol &&
-        board[array[1]] === player1.symbol &&
-        board[array[2]] === player1.symbol
+        board[array[0]] === this.player1.symbol &&
+        board[array[1]] === this.player1.symbol &&
+        board[array[2]] === this.player1.symbol
       ) {
-        gameOver("Player 1");
+        this.gameOver("Player 1");
         return;
       }
       if (
-        board[array[0]] === player2.symbol &&
-        board[array[1]] === player2.symbol &&
-        board[array[2]] === player2.symbol
+        board[array[0]] === this.player2.symbol &&
+        board[array[1]] === this.player2.symbol &&
+        board[array[2]] === this.player2.symbol
       ) {
-        gameOver("Player 2");
+        this.gameOver("Player 2");
         return;
       }
     }
-    if (spacesLeft === 0) {
-      gameOver("tie");
+    if (this.spacesLeft === 0) {
+      this.gameOver("tie");
     }
-  };
+  }
 
-  const gameOver = (endState) => {
+  gameOver(endState) {
     const announcement = document.createElement("p");
     if (endState === "tie") {
       announcement.innerText = "Tied Game";
     } else {
       announcement.innerText = endState + " is the winner!";
     }
-    gameRunning = false;
+    this.gameRunning = false;
     const button = document.createElement("button");
     button.innerText = "Play Again?";
     button.addEventListener("click", (event) => {
-      restartGame();
-      container.removeChild(button);
-      container.removeChild(announcement);
+      this.restartGame();
+      this.container.removeChild(button);
+      this.container.removeChild(announcement);
     });
-    container.appendChild(announcement);
-    container.appendChild(button);
-  };
+    this.container.appendChild(announcement);
+    this.container.appendChild(button);
+  }
 
-  const restartGame = () => {
-    gameBoard.resetBoard();
-    gameRunning = true;
-    spacesLeft = 9;
-  };
+  restartGame() {
+    gameboard.resetBoard();
+    this.gameRunning = true;
+    this.spacesLeft = 9;
+  }
 
-  const turnOver = () => {
-    if (player1 === currentPlayer) {
-      currentPlayer = player2;
-    } else currentPlayer = player1;
-    changePlayerDisplay();
-    spacesLeft--;
-    checkWin();
-  };
+  turnOver() {
+    if (this.player1 === this.currentPlayer) {
+      this.currentPlayer = this.player2;
+    } else this.currentPlayer = this.player1;
+    this.changePlayerDisplay();
+    this.spacesLeft--;
+    this.checkWin();
+  }
+}
 
-  return { turnOver, getCurrentPlayer, getGameRunning };
-})();
+let game = new GameDirector();
+let gameboard = new GameBoard();
